@@ -1,0 +1,2 @@
+locustio==0.8.1
+click==6.7
