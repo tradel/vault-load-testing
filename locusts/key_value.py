@@ -8,36 +8,37 @@ from locust import HttpLocust, task
 
 sys.path.append(os.getcwd())
 import common
-from locusts import VaultLoadTaskSet
+
+from locusts import VaultTaskSet, VaultLocust
 
 
-class KeyValueTasks(VaultLoadTaskSet):
+class KeyValueTasks(VaultTaskSet):
 
     @task
     def get_kv_secret(self):
-        path = '/v1/secret/%s' % random.choice(self.testdata['keys'])
+        path = '/v1/secret/test/%s' % random.choice(self.locust.testdata['keys'])
         self.client.get(path,
                         name='/v1/secret/[key1]/[key2]')
 
     @task
     def put_kv_secret(self):
-        path = '/v1/secret/%s' % random.choice(self.testdata['keys'])
+        path = '/v1/secret/test/%s' % random.choice(self.locust.testdata['keys'])
         self.client.put(path,
-                        json={'value': common.random_data(self.testdata['secret_size'])},
-                        name='/v1/secret/[key1]/[key2]')
+                        json={'value': common.random_data(self.locust.testdata['secret_size'])},
+                        name='/v1/secret/test/[key1]/[key2]')
 
     @task
     def list_l1_secrets(self):
-        self.client.request('LIST', '/v1/secret',
-                            name='/v1/secret')
+        self.client.request('LIST', '/v1/secret/test',
+                            name='/v1/secret/test')
 
     @task
     def list_l2_secrets(self):
-        self.client.request('LIST', '/v1/secret/%s' % common.key_path_1(),
-                            name='/v1/secret/[key1]')
+        self.client.request('LIST', '/v1/secret/test/%s' % common.key_path_1(),
+                            name='/v1/secret/test/[key1]')
 
 
-class KeyValueLocust(HttpLocust):
+class KeyValueLocust(VaultLocust):
     task_set = KeyValueTasks
     weight = 3
     min_wait = 5000

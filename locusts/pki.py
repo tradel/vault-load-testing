@@ -1,43 +1,43 @@
-import json
 import sys
-
-import base64
 import os
 
 from locust import HttpLocust, task
-from locust.clients import HttpSession
 
 sys.path.append(os.getcwd())
-import common
-from locusts import VaultLoadTaskSet
+from locusts import VaultTaskSet, VaultLocust
 
 
-class PkiTasks(VaultLoadTaskSet):
+class PkiTasks(VaultTaskSet):
+    DOMAIN_NAME = 'example.com'
+    ROLE_NAME = 'test-pki-role'
 
-    def on_start(self):
-        super().on_start()
-        c = self.client  # type: HttpSession
-        with c.post('/v1/sys/mounts/pki',
-                    json={'type': 'pki'},
-                    catch_response=True) as response:
-            response.success()
-        with c.post('/v1/pki/root/generate/internal',
-                    json={'common_name': 'example.com', 'ttl': '8760h'},
-                    catch_response=True) as response:
-            response.success()
-        with c.post('/v1/pki/roles/pki-test-role',
-                    json={'allowed_domains': 'example.com', 'max_ttl': '72h', 'allow_subdomains': True},
-                    catch_response=True) as response:
-            response.success()
+    def setup(self):
+        self.mount('pki')
+        self.client.post('/v1/pki/root/generate/internal',
+                         json={'common_name': self.DOMAIN_NAME, 'ttl': '8760h'})
+        self.create_role()
+
+    def teardown(self):
+        self.delete_role()
+
+    def create_role(self):
+        if self.is_in_list(self.ROLE_NAME, '/v1/pki/roles'):
+            self.delete_role()
+        self.client.post(f'/v1/pki/roles/{self.ROLE_NAME}',
+                         json={'allowed_domains': self.DOMAIN_NAME,
+                               'max_ttl': '72h',
+                               'allow_subdomains': True})
+
+    def delete_role(self):
+        self.client.delete(f'/v1/pki/roles/{self.ROLE_NAME}')
 
     @task
     def generate_cert(self):
-        c = self.client  # type: HttpSession
-        c.post('/v1/pki/issue/pki-test-role',
-               json={'common_name': 'foo.example.com'})
+        self.client.post('/v1/pki/issue/test-pki-role',
+                         json={'common_name': f'foo.{self.DOMAIN_NAME}'})
 
 
-class PkiLocust(HttpLocust):
+class PkiLocust(VaultLocust):
     task_set = PkiTasks
     weight = 1
     min_wait = 5000

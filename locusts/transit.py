@@ -9,27 +9,23 @@ from locust.clients import HttpSession
 
 sys.path.append(os.getcwd())
 import common
-from locusts import VaultLoadTaskSet
+
+from locusts import VaultTaskSet, VaultLocust
 
 
-class TransitTasks(VaultLoadTaskSet):
+class TransitTasks(VaultTaskSet):
 
-    def on_start(self):
-        super().on_start()
-        with self.client.post('/v1/sys/mounts/transit',
-                              json={'type': 'transit'},
-                              catch_response=True) as response:
-            response.success()
+    def setup(self):
+        self.mount('transit')
 
     @task
     def encrypt_block(self):
-        data = common.random_data(self.testdata['transit_size'])
+        data = common.random_data(self.locust.testdata['transit_size'])
         data = base64.b64encode(data.encode()).decode()
-        self.client.post('/v1/transit/encrypt/foo',
-                         json={'plaintext': data})
+        self.client.post('/v1/transit/encrypt/test', json={'plaintext': data})
 
 
-class TransitLocust(HttpLocust):
+class TransitLocust(VaultLocust):
     task_set = TransitTasks
     weight = 1
     min_wait = 5000
