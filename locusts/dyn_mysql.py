@@ -9,12 +9,19 @@ from locusts import VaultTaskSet, VaultLocust
 
 
 class MysqlTasks(VaultTaskSet):
+    """
+    In order for this test to work, you must have MySQL running somewhere that is accessible to Vault.
+    Set the environment variable MYSQL_URL to point to the MySQL instance. If you don't have MySQL, remove
+    MysqlLocust from the locustfile.
+    """
     CONFIG_NAME = 'test-mysql-local'
     ROLE_NAME = 'test-mysql-role'
-    CONN_URL = 'root:abc123@tcp(vault0:3306)/mysql'
+    DEFAULT_CONN_URL = '/mysql'
     CREATE_SQL = "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}'; GRANT SELECT ON *.* TO '{{name}}'@'%';"
+    conn_url = None
 
     def setup(self):
+        self._set_conn_url(os.environ.get('MYSQL_URL', self.DEFAULT_CONN_URL))
         self.mount('database')
         self.create_connection()
         self.create_role()
@@ -23,13 +30,17 @@ class MysqlTasks(VaultTaskSet):
         self.delete_role()
         self.delete_connection()
 
+    @classmethod
+    def _set_conn_url(cls, url):
+        cls.conn_url = url
+
     def create_connection(self):
         if self.is_in_list(self.CONFIG_NAME, '/v1/database/config'):
             self.delete_connection()
         self.client.post(f'/v1/database/config/{self.CONFIG_NAME}',
                          json={'plugin_name': 'mysql-database-plugin',
                                'allowed_roles': self.ROLE_NAME,
-                               'connection_url': self.CONN_URL})
+                               'connection_url': self.conn_url})
 
     def delete_connection(self):
         self.client.delete(f'/v1/database/config/{self.CONFIG_NAME}')

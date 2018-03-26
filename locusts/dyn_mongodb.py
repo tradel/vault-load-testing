@@ -8,12 +8,18 @@ from locusts import VaultTaskSet, VaultLocust
 
 
 class MongoDbTasks(VaultTaskSet):
+    """
+    In order for this test to work, you must have MongoDB running somewhere that is accessible to Vault.
+    Set the environment variable MONGODB_URL to point to the MongoDB instance. If you don't have MongoDB, remove
+    MongoDbLocust from the locustfile.
+    """
     CONFIG_NAME = 'test-mongodb-local'
     ROLE_NAME = 'test-mongodb-role'
-    CONN_URL = 'mongodb://vault0:27017/admin'
+    DEFAULT_CONN_URL = 'mongodb://localhost:27017/admin'
     CREATE_SQL = '{"db": "admin", "roles": [{"role": "read", "db": "foo"}]}'
 
     def setup(self):
+        self._set_conn_url(os.environ.get('MONGODB_URL', self.DEFAULT_CONN_URL))
         self.mount('database')
         self.create_connection()
         self.create_role()
@@ -22,13 +28,17 @@ class MongoDbTasks(VaultTaskSet):
         self.delete_role()
         self.delete_connection()
 
+    @classmethod
+    def _set_conn_url(cls, url):
+        cls.conn_url = url
+
     def create_connection(self):
         if self.is_in_list(self.CONFIG_NAME, '/v1/database/config'):
             self.delete_connection()
         self.client.post(f'/v1/database/config/{self.CONFIG_NAME}',
                          json={'plugin_name': 'mongodb-database-plugin',
                                'allowed_roles': self.ROLE_NAME,
-                               'connection_url': self.CONN_URL})
+                               'connection_url': self.conn_url})
 
     def create_role(self):
         if self.is_in_list(self.ROLE_NAME, '/v1/database/roles'):

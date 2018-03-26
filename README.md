@@ -4,6 +4,22 @@ Load Tests for Vault
 This project aims to generate realistic load against Vault (and, by extension,
 Consul) by exercising various secrets engines and auth methods.
 
+## Prerequisites
+
+You need to have Vault running, obviously, and the vault must be unsealed before 
+starting the test.
+
+If you want to test dynamic secret generation via the database backends (MySQL, 
+MongoDB), you must have those database engines running during the test. You will
+need to set up environment variables with the connection strings in the appropriate 
+formats, for example:
+
+    export MONGODB_URL="mongodb://localhost:27017/admin"
+    export MYSQL_URL="root:password@tcp(127.0.0.1:3306)/mysql"
+
+If you don't have the databases available, remove the database locusts from the
+`locustfile`.
+
 ## Setup
 
  1. Clone this repo.
