@@ -58,11 +58,13 @@ per second until all 25 are running:
 
 ## What the test does
 
-The test simulates three different patterns of access:
+The test simulates several different patterns of access:
 
  1. Reading, writing, and listing secrets with the KV engine.
  2. Generating certificates from the PKI engine.
  3. Encrypting data via the Transit engine.
+ 4. Generating dynamic secrets from the MySQL, MongoDB, and TOTP engines.
+ 5. Authenticating via username/password and AppRole.
  
 The tests are weighted so that 60% of the users are interacting with the KV
 engine, 20% with the PKI engine, and 20% with the Transit engine. These weights
@@ -71,7 +73,7 @@ the `locusts` folder.
 
 ## Future enhancements
 
- - [ ] Authentication
- - [ ] Dynamic secret generation
+ - [x] Authentication
+ - [x] Dynamic secret generation
  - [ ] Reports and analysis?
  
