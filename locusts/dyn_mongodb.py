@@ -2,7 +2,6 @@ import sys
 import os
 
 from locust import task
-from locust.clients import HttpSession
 
 sys.path.append(os.getcwd())
 from locusts import VaultTaskSet, VaultLocust
