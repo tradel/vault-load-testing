@@ -13,7 +13,7 @@ def populate(host, count, size, token):
     with click.progressbar(range(count), label='Creating test keys in Vault') as bar:
         for _ in bar:
             path = common.key_path()
-            r = s.post(f'{host}/v1/secret/{path}', json={'value': common.random_data(size)})
+            r = s.post(f'{host}/v1/secret/test/{path}', json={'value': common.random_data(size)})
             r.raise_for_status()
             paths.append(path)
 
