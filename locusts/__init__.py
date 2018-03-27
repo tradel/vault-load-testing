@@ -36,21 +36,25 @@ class VaultTaskSet(TaskSet):
         mount_point = mount_point or name
         r = self.client.get('/v1/sys/mounts')
         if f'{mount_point}/' not in r.json():
-            self.client.post(f'/v1/sys/auth/{mount_point}', json={'type': name})
+            self.client.post(f'/v1/sys/mounts/{mount_point}', json={'type': name})
 
     def enable_auth(self, name: str, path: str=None):
         path = path or name
         r = self.client.get('/v1/sys/auth')
         if f'{path}/' not in r.json():
-            self.client.post(f'/v1/sys/mounts/{path}', json={'type': name})
+            self.client.post(f'/v1/sys/auth/{path}', json={'type': name})
 
     def revoke_lease(self, lease_id: str):
         self.client.put('/v1/sys/leases/revoke',
                         json={'lease_id': lease_id})
 
     def is_in_list(self, key: str, uri: str) -> bool:
-        r = self.client.request('LIST', uri)
-        return key in r.json()['data']['keys']
+        with self.client.request('LIST', uri, catch_response=True) as r:
+            if r.status_code == 404:
+                r.success()
+                return False
+            else:
+                return key in r.json()['data']['keys']
 
     @property
     def client(self) -> HttpSession:
