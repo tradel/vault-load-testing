@@ -13,7 +13,6 @@ class VaultLocust(HttpLocust):
     def __init__(self):
         super().__init__()
         self.client = VaultSession(base_url=self.host)
-        self.client.headers['X-Vault-Token'] = self.token
 
     def setup(self):
         with open('testdata.json', 'r') as f:
@@ -58,7 +57,9 @@ class VaultTaskSet(TaskSet):
 
     @property
     def client(self) -> HttpSession:
-        return super().client
+        client = super().client  # type: HttpSession
+        client.headers['X-Vault-Token'] = self.locust.token
+        return client
 
 
 class VaultSession(HttpSession):
