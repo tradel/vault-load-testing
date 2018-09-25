@@ -13,7 +13,8 @@ def populate(host, count, size, token):
     with click.progressbar(range(count), label='Creating test keys in Vault') as bar:
         for _ in bar:
             path = common.key_path()
-            r = s.post(f'{host}/v1/secret/test/{path}', json={'value': common.random_data(size)})
+            r = s.post(f'{host}/v1/secret/test/{path}',
+                       json={'value': common.random_data(size)})
             r.raise_for_status()
             paths.append(path)
 
@@ -21,7 +22,7 @@ def populate(host, count, size, token):
 
 
 @click.command()
-@click.option('--secrets', default=1000,
+@click.option('--num-secrets', default=1000,
               help='Number of test secrets to create')
 @click.option('--secret-size', default=1024,
               help='Size of each secret, in bytes')
@@ -30,12 +31,12 @@ def populate(host, count, size, token):
 @click.option('--host', '-H', default='http://localhost:8200',
               help='URL of the Vault server to test')
 @click.argument('token', envvar='TOKEN')
-def main(host, secrets, secret_size, transit_size, token):
-    paths = populate(host, secrets, secret_size, token)
+def main(host, num_secrets, secret_size, transit_size, token):
+    paths = populate(host, num_secrets, secret_size, token)
     with open('testdata.json', 'w') as f:
         json.dump({
             'token': token,
-            'num_secrets': secrets,
+            'num_secrets': num_secrets,
             'secret_size': secret_size,
             'transit_size': transit_size,
             'keys': paths,

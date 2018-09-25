@@ -13,6 +13,7 @@ class VaultLocust(HttpLocust):
     def __init__(self):
         super().__init__()
         self.client = VaultSession(base_url=self.host)
+        self.setup()
 
     def setup(self):
         with open('testdata.json', 'r') as f:
@@ -35,7 +36,8 @@ class VaultTaskSet(TaskSet):
         mount_point = mount_point or name
         r = self.client.get('/v1/sys/mounts')
         if f'{mount_point}/' not in r.json():
-            self.client.post(f'/v1/sys/mounts/{mount_point}', json={'type': name})
+            self.client.post(
+                f'/v1/sys/mounts/{mount_point}', json={'type': name})
 
     def enable_auth(self, name: str, path: str=None):
         path = path or name
@@ -79,14 +81,17 @@ class VaultSession(HttpSession):
         response = self._send_request_safe_mode(method, url, **kwargs)
 
         # record the consumed time
-        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        request_meta["response_time"] = int(
+            (time.time() - request_meta["start_time"]) * 1000)
 
-        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
+        request_meta["name"] = name or (
+            response.history and response.history[0] or response).request.path_url
 
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if kwargs.get("stream", False):
-            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+            request_meta["content_size"] = int(
+                response.headers.get("content-length") or 0)
         else:
             request_meta["content_size"] = len(response.content or "")
 
@@ -98,7 +103,8 @@ class VaultSession(HttpSession):
                 response.raise_for_status()
             except RequestException as e:
                 try:
-                    e = CatchResponseError('. '.join(response.json()['errors']))
+                    e = CatchResponseError(
+                        '. '.join(response.json()['errors']))
                 except KeyError:
                     pass
 
