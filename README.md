@@ -9,6 +9,8 @@ Consul) by exercising various secrets engines and auth methods.
 You need to have Vault running, obviously, and the vault must be unsealed before 
 starting the test.
 
+The code in this repo requires Python3.6.
+
 If you want to test dynamic secret generation via the database backends (MySQL, 
 MongoDB), you must have those database engines running during the test. You will
 need to set up environment variables with the connection strings in the appropriate 
