@@ -1,14 +1,8 @@
-import json
 import sys
-
 import os
-import random
-
-from locust import HttpLocust, task
-
-sys.path.append(os.getcwd())
 import common
 
+from locust import task
 from locusts import VaultTaskSet, VaultLocust
 
 
