@@ -73,6 +73,15 @@ per second until all 25 are running:
 
     locust -H http://localhost:8200 -c 25 -r 5 --no-web
 
+### testdata.json
+
+Running the ./prepare.py script creates a testdata.json file on the host it is run from.
+
+This file contains the vault token used to run the pre-fill vault with secrets, so treat that file as secret.
+
+If you plan to run the load test from multiple hosts, you will need to copy the testdata.json file to those hosts
+before running the load test in order for it to work correctly. 
+
 
 ## What the test does
 
