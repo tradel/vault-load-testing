@@ -6,14 +6,37 @@ import click
 import json
 
 
-def populate(host, count, size, token):
+def get_kv_version(host: str, token: str) -> int:
+    s = requests.Session()
+    s.headers = {'X-Vault-Token': token}
+    r = s.get(f'{host}/v1/sys/mounts')
+    r.raise_for_status()
+
+    version = 1
+    for key, val in r.json().items():
+        if key == 'secret/':
+            if 'options' in val:
+                version = int(val['options'].get('version', 1))
+            break
+
+    return version
+
+
+def populate(host: str, count: int, size: int, token: str) -> None:
+    kv_version = get_kv_version(host, token)
+    click.echo(click.style(f'Using Vault KV version {kv_version}', bold=True, fg='white'))
+
     s = requests.Session()
     s.headers = {'X-Vault-Token': token}
     paths = []
     with click.progressbar(range(count), label='Creating test keys in Vault') as bar:
         for _ in bar:
             path = common.key_path()
-            r = s.post(f'{host}/v1/secret/test/{path}', json={'value': common.random_data(size)})
+            if kv_version == 1:
+                r = s.post(f'{host}/v1/secret/test/{path}', json={'value': common.random_data(size)})
+            else:
+                r = s.post(f'{host}/v1/secret/data/test/{path}', json={'data': {'value': common.random_data(size)}})
+
             if r.status_code >= 400:
                 try:
                     for msg in r.json()['warnings']:
