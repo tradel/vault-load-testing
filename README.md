@@ -50,12 +50,12 @@ http://localhost:8200. If this is not correct, use the `--host` or `-h` option
 to specify the correct URL.  
 
 The final argument to `prepare.py` must be a Vault token for authentication.
-The token can instead be passed in the environment variable `TOKEN` if you 
+The token can instead be passed in the environment variable `VAULT_TOKEN` if you 
 prefer.
 
 Example usage:
 
-    TOKEN="72e7ff6e-8f44-5414-75a8-99d308649954" ./prepare.py --num-secrets=1000000 --host="http://localhost:8200"
+    VAULT_TOKEN="72e7ff6e-8f44-5414-75a8-99d308649954" ./prepare.py --num-secrets=1000000 --host="http://localhost:8200"
 
 
 ## Running the test
