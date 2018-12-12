@@ -59,10 +59,11 @@ class AppRoleTaskSet(VaultTaskSet):
                                   json={'role_id': self.role_id,
                                         'secret_id': secret[0] + 'XXX'},
                                   catch_response=True) as r:
-                if r.status_code == 400 and 'failed to validate credentials' in r.json()['errors'][0]:
+                if r.status_code == 400 and ('failed to validate credentials' in r.json()['errors'][0]
+                                             or 'invalid secret id' in r.json()['errors'][0]):
                     r.success()
                 else:
-                    r.failure('unexpected response to bad auth token')
+                    r.failure('unexpected response to bad auth token: ' + r.content.decode('utf-8'))
         except IndexError:
             pass
 
