@@ -14,8 +14,15 @@ def populate(host, count, size, token):
         for _ in bar:
             path = common.key_path()
             r = s.post(f'{host}/v1/secret/test/{path}', json={'value': common.random_data(size)})
-            r.raise_for_status()
-            paths.append(path)
+            if r.status_code >= 400:
+                try:
+                    for msg in r.json()['warnings']:
+                        click.echo(click.style(f'Error returned by Vault: {msg}', bold=True, fg='yellow'), err=True)
+                except KeyError:
+                    pass
+                r.raise_for_status()
+            else:
+                paths.append(path)
 
     return paths
 
@@ -29,7 +36,7 @@ def populate(host, count, size, token):
               help='Size of data blocks to encrypt for Transit tests, in bytes')
 @click.option('--host', '-H', default='http://localhost:8200',
               help='URL of the Vault server to test')
-@click.argument('token', envvar='TOKEN')
+@click.argument('token', envvar='VAULT_TOKEN')
 def main(host, secrets, secret_size, transit_size, token):
     paths = populate(host, secrets, secret_size, token)
     with open('testdata.json', 'w') as f:
