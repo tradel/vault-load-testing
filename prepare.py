@@ -4,27 +4,15 @@ import common
 import requests
 import click
 import json
+from typing import List
+from common import get_kv_version
 
 
-def get_kv_version(host: str, token: str) -> int:
-    s = requests.Session()
-    s.headers = {'X-Vault-Token': token}
-    r = s.get(f'{host}/v1/sys/mounts')
-    r.raise_for_status()
+def populate(host: str, count: int, size: int, token: str) -> List[str]:
 
-    version = 1
-    for key, val in r.json().items():
-        if key == 'secret/':
-            if 'options' in val:
-                version = int(val['options'].get('version', 1))
-            break
-
-    return version
-
-
-def populate(host: str, count: int, size: int, token: str) -> None:
-    kv_version = get_kv_version(host, token)
-    click.echo(click.style(f'Using Vault KV version {kv_version}', bold=True, fg='white'))
+    click.echo('\nChecking Vault KV version...')
+    kv_version = get_kv_version(host=host, token=token)
+    click.echo(click.style(f'Using Vault KV version {kv_version}\n', bold=True, fg='white'))
 
     s = requests.Session()
     s.headers = {'X-Vault-Token': token}
