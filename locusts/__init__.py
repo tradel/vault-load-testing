@@ -2,6 +2,7 @@ from locust import TaskSet, HttpLocust
 from locust.clients import ResponseContextManager, HttpSession, RequestException, events, CatchResponseError
 import time
 
+import os
 import json
 
 
@@ -66,6 +67,9 @@ class VaultSession(HttpSession):
 
     def request(self, method, url, name=None, catch_response=False, **kwargs):
 
+        # Load any TLS certificates specified in the VAULT_CACERT env var
+        self.verify = os.environ.get('VAULT_CACERT', None)
+
         # prepend url with hostname unless it's already an absolute URL
         url = self._build_url(url)
 
@@ -100,7 +104,9 @@ class VaultSession(HttpSession):
                 try:
                     e = CatchResponseError('. '.join(response.json()['errors']))
                 except KeyError:
-                    pass
+                    e = CatchResponseError(e)
+                except json.JSONDecodeError:
+                    e = CatchResponseError(e)
 
                 events.request_failure.fire(
                     request_type=request_meta["method"],
