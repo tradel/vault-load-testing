@@ -12,9 +12,9 @@ class PkiTasks(VaultTaskSet):
     ROLE_NAME = 'test-pki-role'
 
     def setup(self):
-        self.mount('pki')
-        self.client.post('/v1/pki/root/generate/internal',
-                         json={'common_name': self.DOMAIN_NAME, 'ttl': '8760h'})
+        #self.mount('pki')
+        #self.client.post('/v1/pki/root/generate/internal',
+        #                 json={'common_name': self.DOMAIN_NAME, 'ttl': '8760h'})
         self.create_role()
 
     def teardown(self):
@@ -25,7 +25,7 @@ class PkiTasks(VaultTaskSet):
             self.delete_role()
         self.client.post(f'/v1/pki/roles/{self.ROLE_NAME}',
                          json={'allowed_domains': self.DOMAIN_NAME,
-                               'max_ttl': '72h',
+                               'max_ttl': '2h',
                                'allow_subdomains': True})
 
     def delete_role(self):
@@ -33,12 +33,14 @@ class PkiTasks(VaultTaskSet):
 
     @task
     def generate_cert(self):
-        self.client.post('/v1/pki/issue/test-pki-role',
+        self.client.post(f'/v1/pki/issue/{self.ROLE_NAME}',
                          json={'common_name': f'foo.{self.DOMAIN_NAME}'})
 
 
 class PkiLocust(VaultLocust):
     task_set = PkiTasks
     weight = 1
-    min_wait = 5000
-    max_wait = 10000
+    # min_wait = 60000
+    # max_wait = 60000*5
+    min_wait = 100
+    max_wait = 1000

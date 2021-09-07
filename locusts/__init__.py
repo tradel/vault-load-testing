@@ -32,13 +32,14 @@ class VaultLocust(HttpLocust):
 
 class VaultTaskSet(TaskSet):
 
-    def mount(self, name: str, mount_point: str=None):
+    def mount(self, name: str, mount_point: str = None):
         mount_point = mount_point or name
         r = self.client.get('/v1/sys/mounts')
         if f'{mount_point}/' not in r.json():
-            self.client.post(f'/v1/sys/mounts/{mount_point}', json={'type': name})
+            self.client.post(
+                f'/v1/sys/mounts/{mount_point}', json={'type': name})
 
-    def enable_auth(self, name: str, path: str=None):
+    def enable_auth(self, name: str, path: str = None):
         path = path or name
         r = self.client.get('/v1/sys/auth')
         if f'{path}/' not in r.json():
@@ -54,6 +55,7 @@ class VaultTaskSet(TaskSet):
                 r.success()
                 return False
             else:
+                print(r.json())
                 return key in r.json()['data']['keys']
 
     @property
@@ -83,14 +85,17 @@ class VaultSession(HttpSession):
         response = self._send_request_safe_mode(method, url, **kwargs)
 
         # record the consumed time
-        request_meta["response_time"] = int((time.time() - request_meta["start_time"]) * 1000)
+        request_meta["response_time"] = int(
+            (time.time() - request_meta["start_time"]) * 1000)
 
-        request_meta["name"] = name or (response.history and response.history[0] or response).request.path_url
+        request_meta["name"] = name or (
+            response.history and response.history[0] or response).request.path_url
 
         # get the length of the content, but if the argument stream is set to True, we take
         # the size from the content-length header, in order to not trigger fetching of the body
         if kwargs.get("stream", False):
-            request_meta["content_size"] = int(response.headers.get("content-length") or 0)
+            request_meta["content_size"] = int(
+                response.headers.get("content-length") or 0)
         else:
             request_meta["content_size"] = len(response.content or "")
 
@@ -102,7 +107,8 @@ class VaultSession(HttpSession):
                 response.raise_for_status()
             except RequestException as e:
                 try:
-                    e = CatchResponseError('. '.join(response.json()['errors']))
+                    e = CatchResponseError(
+                        '. '.join(response.json()['errors']))
                 except KeyError:
                     e = CatchResponseError(e)
                 except json.JSONDecodeError:
